@@ -40,8 +40,8 @@ fi
 # 配置IP
 # ==========================================
 if [ -f "package/base-files/files/bin/config_generate" ]; then
-    sed -i 's/192.168.1.1/192.168.31.1/g' package/base-files/files/bin/config_generate
-    echo "✓ IP改为192.168.31.1"
+    sed -i 's/192.168.1.1/192.168.1.32/g' package/base-files/files/bin/config_generate
+    echo "✓ IP改为192.168.1.32"
 fi
 
 # ==========================================
@@ -56,9 +56,9 @@ fi
 # 配置时区
 # ==========================================
 if [ -f "package/base-files/files/bin/config_generate" ]; then
-    sed -i "s/timezone='.*'/timezone='CST-8'/g" package/base-files/files/bin/config_generate
-    sed -i "/timezone='CST-8'/a\\\t\tset system.@system[-1].zonename='Asia/Shanghai'" package/base-files/files/bin/config_generate
-    echo "✓ 时区改为Asia/Shanghai"
+    sed -i "s/timezone='.*'/timezone='JST-9'/g" package/base-files/files/bin/config_generate
+    sed -i "/timezone='JST-9'/a\\\t\tset system.@system[-1].zonename='Asia/Tokyo'" package/base-files/files/bin/config_generate
+    echo "✓ 时区改为Asia/Tokyo"
 fi
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
@@ -155,12 +155,12 @@ if [ -f "$MAC80211_UC" ]; then
     
     sed -i "s/set \${si}\.disabled='\${defaults ? 0 : 1}'/set \${si}.disabled='0'/g" "$MAC80211_UC"
     sed -i 's/"OpenWrt"/"Wax206"/g' "$MAC80211_UC"
-    sed -i "s|set \${s}.country=.*|set \${s}.country='US'|g" "$MAC80211_UC"
+    sed -i "s|set \${s}.country=.*|set \${s}.country='JP'|g" "$MAC80211_UC"
     sed -i "/set \${s}.country=/a set \${s}.txpower='28'" "$MAC80211_UC"
     
     echo "✓ WiFi 默认启用"
     echo "✓ SSID 改为 Wax206"  
-    echo "✓ 国家代码 US，功率 28"
+    echo "✓ 国家代码 JP，功率 28"
 else
     echo "警告: 未找到 $MAC80211_UC"
     find . -name "mac80211.uc" -type f 2>/dev/null
