@@ -37,11 +37,11 @@ if [ -d "package/luci-app-devicemaster" ]; then
 fi
 
 # ==========================================
-# 配置IP
+# 配置 AP 管理 IP
 # ==========================================
 if [ -f "package/base-files/files/bin/config_generate" ]; then
-    sed -i 's/192.168.1.1/192.168.31.1/g' package/base-files/files/bin/config_generate
-    echo "✓ IP改为192.168.31.1"
+    sed -i 's/192.168.1.1/192.168.1.32/g' package/base-files/files/bin/config_generate
+    echo "✓ AP 管理 IP 改为192.168.1.32"
 fi
 
 # ==========================================
@@ -56,10 +56,71 @@ fi
 # 配置时区
 # ==========================================
 if [ -f "package/base-files/files/bin/config_generate" ]; then
-    sed -i "s/timezone='.*'/timezone='CST-8'/g" package/base-files/files/bin/config_generate
-    sed -i "/timezone='CST-8'/a\\\t\tset system.@system[-1].zonename='Asia/Shanghai'" package/base-files/files/bin/config_generate
-    echo "✓ 时区改为Asia/Shanghai"
+    sed -i "s/timezone='.*'/timezone='JST-9'/g" package/base-files/files/bin/config_generate
+    sed -i "/timezone='JST-9'/a\\\t\tset system.@system[-1].zonename='Asia/Tokyo'" package/base-files/files/bin/config_generate
+    echo "✓ 时区改为Asia/Tokyo"
 fi
+
+# ==========================================
+# 配置为 AP（物理 WAN 口并入 LAN 网桥）
+# ==========================================
+echo ">>> 写入 AP 模式首次启动配置..."
+
+mkdir -p package/base-files/files/etc/uci-defaults
+
+cat > package/base-files/files/etc/uci-defaults/99-ap-mode << 'APMODE'
+#!/bin/sh
+
+# 使用 LAN 网桥作为 AP 的管理接口。
+uci -q batch << 'EOF'
+set network.lan.proto='static'
+set network.lan.ipaddr='192.168.1.32'
+set network.lan.netmask='255.255.255.0'
+set network.lan.gateway='192.168.1.1'
+delete network.lan.dns
+add_list network.lan.dns='1.1.1.1'
+add_list network.lan.dns='8.8.8.8'
+
+# AP 不保留独立的逻辑 WAN/WAN6 接口。
+delete network.wan
+delete network.wan6
+
+# DHCP 由上级路由器提供，本机不发放 IPv4/IPv6 地址，也不发送 RA。
+set dhcp.lan.ignore='1'
+set dhcp.lan.dhcpv4='disabled'
+set dhcp.lan.dhcpv6='disabled'
+set dhcp.lan.ra='disabled'
+set dhcp.lan.ndp='disabled'
+EOF
+
+# 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
+BR_LAN_DEVICE="$({
+    uci -q show network | sed -n "s/^\(network\.[^=]*\)=device$/\1/p" | while read -r section; do
+        if [ "$(uci -q get "${section}.name")" = 'br-lan' ]; then
+            echo "$section"
+            break
+        fi
+    done
+} 2>/dev/null)"
+
+if [ -n "$BR_LAN_DEVICE" ]; then
+    uci -q del_list "${BR_LAN_DEVICE}.ports=wan"
+    uci -q add_list "${BR_LAN_DEVICE}.ports=wan"
+else
+    logger -t 99-ap-mode "未找到 br-lan device 配置，无法将物理 wan 口加入 LAN 网桥"
+fi
+
+uci commit network
+uci commit dhcp
+
+exit 0
+APMODE
+
+chmod +x package/base-files/files/etc/uci-defaults/99-ap-mode
+echo "✓ AP 模式：管理 IP 192.168.1.32，网关 192.168.1.1"
+echo "✓ LAN DNS：1.1.1.1、8.8.8.8"
+echo "✓ 物理 WAN 口将并入 br-lan"
+echo "✓ DHCPv4、DHCPv6、IPv6 RA 和 NDP 已关闭"
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
 
@@ -155,12 +216,12 @@ if [ -f "$MAC80211_UC" ]; then
     
     sed -i "s/set \${si}\.disabled='\${defaults ? 0 : 1}'/set \${si}.disabled='0'/g" "$MAC80211_UC"
     sed -i 's/"OpenWrt"/"Wax206"/g' "$MAC80211_UC"
-    sed -i "s|set \${s}.country=.*|set \${s}.country='US'|g" "$MAC80211_UC"
+    sed -i "s|set \${s}.country=.*|set \${s}.country='JP'|g" "$MAC80211_UC"
     sed -i "/set \${s}.country=/a set \${s}.txpower='28'" "$MAC80211_UC"
     
     echo "✓ WiFi 默认启用"
-    echo "✓ SSID 改为 Wax206"  
-    echo "✓ 国家代码 US，功率 28"
+    echo "✓ SSID 改为 Wax206"
+    echo "✓ 国家代码 JP，功率 28"
 else
     echo "警告: 未找到 $MAC80211_UC"
     find . -name "mac80211.uc" -type f 2>/dev/null
