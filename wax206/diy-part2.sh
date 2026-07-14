@@ -10,8 +10,8 @@ echo "=========================================="
 
 echo "目标目录: $BUILD_DIR"
 
-if [ ! -d "./$BUILD_DIR" ]; then
-    echo "错误: 目录 ./$BUILD_DIR 不存在"
+if [ ! -d "$BUILD_DIR" ]; then
+    echo "错误: 目录 $BUILD_DIR 不存在"
     ls -la
     exit 1
 fi
@@ -26,7 +26,7 @@ else
     echo "⚠ 警告: wax206/packages/luci-app-devicemaster 不存在，跳过插件安装"
 fi
 
-cd "./$BUILD_DIR" || exit 1
+cd "$BUILD_DIR" || exit 1
 echo "进入目录: $(pwd)"
 
 # ========== 安装插件到 feeds ==========
