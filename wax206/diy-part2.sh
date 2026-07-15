@@ -97,6 +97,26 @@ set system.@system[0].timezone='JST-9'
 set system.@system[0].clock_hourcycle='h23'
 set luci.main.lang='zh_cn'
 
+# 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯。
+delete system.wifi24_blue
+set system.wifi24_blue='led'
+set system.wifi24_blue.name='2.4Ghz 蓝色'
+set system.wifi24_blue.sysfs='wifin:blue'
+set system.wifi24_blue.trigger='netdev'
+set system.wifi24_blue.dev='wl0-ap0'
+add_list system.wifi24_blue.mode='link'
+add_list system.wifi24_blue.mode='tx'
+add_list system.wifi24_blue.mode='rx'
+
+delete system.wifi5_blue
+set system.wifi5_blue='led'
+set system.wifi5_blue.name='5Ghz 蓝色'
+set system.wifi5_blue.sysfs='wifia:blue'
+set system.wifi5_blue.trigger='netdev'
+set system.wifi5_blue.dev='wl1-ap0'
+add_list system.wifi5_blue.mode='link'
+add_list system.wifi5_blue.mode='tx'
+add_list system.wifi5_blue.mode='rx'
 EOF
 
 # 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
@@ -118,6 +138,8 @@ fi
 
 uci commit network
 uci commit dhcp
+uci commit system
+uci commit luci
 
 exit 0
 APMODE
@@ -128,6 +150,8 @@ echo "✓ LAN DNS：1.1.1.1、8.8.8.8"
 echo "✓ 物理 WAN 口将并入 br-lan"
 echo "✓ DHCPv4、DHCPv6 和 NDP 已关闭"
 echo "✓ IPv6 RA 已启用：SLAAC、DNS 和 DoT/DoH DNR 已预置"
+echo "✓ 时区：Asia/Tokyo，24 小时制，LuCI 简体中文"
+echo "✓ 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯已配置"
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
 
