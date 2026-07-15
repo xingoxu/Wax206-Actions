@@ -2,7 +2,7 @@
 
 remove_unwanted_packages() {
     local luci_packages=(
-        "luci-app-passwall" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
+        "luci-app-passwall2" "luci-app-ddns-go" "luci-app-rclone" "luci-app-ssr-plus"
         "luci-app-vssr" "luci-app-daed" "luci-app-dae" "luci-app-alist" "luci-app-homeproxy"
         "luci-app-haproxy-tcp" "luci-app-openclash" "luci-app-mihomo" "luci-app-appfilter"
         "luci-app-msd_lite" "luci-app-unblockneteasemusic" "luci-app-adguardhome"
@@ -153,14 +153,19 @@ install_custom_feed() {
         v2dat adguardhome luci-app-adguardhome ddns-go \
         luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
-        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic \
+        lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic \
         oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
         msd_lite luci-app-msd_lite cups luci-app-cupsd
     )
     local required_feed_dirs=(
-        cups tcping v2ray-geodata luci-lib-taskd luci-app-openclash
+        cups tcping v2ray-geodata luci-lib-taskd luci-app-passwall2
         luci-app-quickstart luci-app-store luci-app-homeproxy
         open-app-filter luci-app-oaf lucky luci-app-lucky luci-app-easytier
+    )
+    local passwall2_dependency_packages=(
+        chinadns-ng dns2socks geoview hysteria ipt2socks microsocks naiveproxy
+        shadowsocks-rust shadowsocksr-libev simple-obfs sing-box tcping
+        v2ray-geodata v2ray-plugin xray-core xray-plugin
     )
     local custom_feed_sources=()
     local missing_feed_dirs=()
@@ -181,7 +186,8 @@ install_custom_feed() {
     custom_feed_sources=(
         "fichenx/openwrt-package|https://github.com/fichenx/openwrt-package.git|js|${base_custom_feed_packages[*]}"
         "sbwml/luci-app-mosdns|https://github.com/sbwml/luci-app-mosdns.git|v5|mosdns luci-app-mosdns"
-        "Openwrt-Passwall/openwrt-passwall|https://github.com/Openwrt-Passwall/openwrt-passwall.git|main|luci-app-passwall"
+        "Openwrt-Passwall/openwrt-passwall-packages|https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git|main|${passwall2_dependency_packages[*]}"
+        "Openwrt-Passwall/openwrt-passwall2|https://github.com/Openwrt-Passwall/openwrt-passwall2.git|main|luci-app-passwall2"
         "nikkinikki-org/OpenWrt-nikki|https://github.com/nikkinikki-org/OpenWrt-nikki.git|main|nikki luci-app-nikki mihomo-meta"
     )
 

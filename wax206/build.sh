@@ -234,14 +234,14 @@ update_feeds() {
         echo "src-git kenzok https://github.com/kenzok8/openwrt-packages.git;master" >>"$FEEDS_PATH"
     fi
 
-    if ! grep -q "openwrt-passwall" "$FEEDS_PATH"; then
+    if ! grep -q "openwrt-passwall2" "$FEEDS_PATH"; then
         [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-        echo "src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall;main" >>"$FEEDS_PATH"
+        echo "src-git passwall2 https://github.com/Openwrt-Passwall/openwrt-passwall2.git;main" >>"$FEEDS_PATH"
     fi
 
-    if ! grep -q "openclash" "$FEEDS_PATH"; then
+    if ! grep -q "openwrt-passwall-packages" "$FEEDS_PATH"; then
         [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-        echo "src-git openclash https://github.com/vernesong/OpenClash.git;master" >>"$FEEDS_PATH"
+        echo "src-git passwall_packages https://github.com/Openwrt-Passwall/openwrt-passwall-packages.git;main" >>"$FEEDS_PATH"
     fi
 
     if ! grep -q "openwrt_bandix" "$BUILD_DIR/$FEEDS_CONF"; then
@@ -265,8 +265,8 @@ update_feeds() {
     # 更新官方 feeds（这些源的 Makefile 格式正常）
     ./scripts/feeds update base packages luci routing telephony
     
-    # 更新 OpenClash 和 Passwall（这些源格式正常）
-    for feed in openclash passwall; do
+    # 更新 Passwall2 及其官方依赖源
+    for feed in passwall_packages passwall2; do
         ./scripts/feeds update "$feed" 2>/dev/null || echo "Warning: $feed update failed"
     done
     
@@ -302,14 +302,14 @@ install_feeds() {
         fi
     done
     
-    # 安装 OpenClash
-    if [ -d "$BUILD_DIR/feeds/openclash" ]; then
-        install_openclash || echo "Warning: OpenClash install failed"
+    # 安装 Passwall2 官方依赖
+    if [ -d "$BUILD_DIR/feeds/passwall_packages" ]; then
+        ./scripts/feeds install -f -a -p passwall_packages || echo "Warning: Passwall2 dependencies install failed"
     fi
-    
-    # 安装 Passwall
-    if [ -d "$BUILD_DIR/feeds/passwall" ]; then
-        install_passwall || echo "Warning: Passwall install failed"
+
+    # 安装 Passwall2
+    if [ -d "$BUILD_DIR/feeds/passwall2" ]; then
+        install_passwall2 || echo "Warning: Passwall2 install failed"
     fi
     
     # 对于有问题的第三方源，手动复制需要的包到 package 目录
@@ -372,21 +372,15 @@ install_fichenx() {
         v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
         luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
-        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+        lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
         tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
         msd_lite luci-app-msd_lite cups luci-app-cupsd
     cd - > /dev/null
 }
 
-install_openclash() {
+install_passwall2() {
     cd "$BUILD_DIR"
-    ./scripts/feeds install -p openclash -f luci-app-openclash
-    cd - > /dev/null
-}
-
-install_passwall() {
-    cd "$BUILD_DIR"
-    ./scripts/feeds install -p passwall -f luci-app-passwall
+    ./scripts/feeds install -p passwall2 -f luci-app-passwall2
     cd - > /dev/null
 }
 

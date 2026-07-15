@@ -160,9 +160,6 @@ fix_mkpkg_format_invalid() {
         if [ -f "$custom_feed_worktree_dir/luci-lib-taskd/Makefile" ]; then
             sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' "$custom_feed_worktree_dir/luci-lib-taskd/Makefile"
         fi
-        if [ -f "$custom_feed_worktree_dir/luci-app-openclash/Makefile" ]; then
-            sed -i 's/PKG_RELEASE:=beta/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-openclash/Makefile"
-        fi
         if [ -f "$custom_feed_worktree_dir/luci-app-quickstart/Makefile" ]; then
             sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0\.8\.16/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
             sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
@@ -237,13 +234,13 @@ EOF
     chmod +x "$sh_dir/custom_task"
 }
 
-apply_passwall_tweaks() {
-    local chnlist_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/root/usr/share/passwall/rules/chnlist"
+apply_passwall2_tweaks() {
+    local chnlist_path="$(get_custom_feed_worktree_dir)/luci-app-passwall2/root/usr/share/passwall2/rules/chnlist"
     if [ -f "$chnlist_path" ]; then
         >"$chnlist_path"
     fi
 
-    local xray_util_path="$(get_custom_feed_worktree_dir)/luci-app-passwall/luasrc/passwall/util_xray.lua"
+    local xray_util_path="$(get_custom_feed_worktree_dir)/luci-app-passwall2/luasrc/passwall2/util_xray.lua"
     if [ -f "$xray_util_path" ]; then
         sed -i 's/maxRTT = "1s"/maxRTT = "2s"/g' "$xray_util_path"
         sed -i 's/sampling = 3/sampling = 5/g' "$xray_util_path"
