@@ -27,8 +27,6 @@ update_feeds() {
     sed -i '/[[:space:]]fichenx[[:space:]]/d' "$FEEDS_PATH"
     sed -i '/[[:space:]]custom_feed[[:space:]]/d' "$FEEDS_PATH"
 
-    append_feed_if_missing "$FEEDS_PATH" "openwrt_bandix" "src-git openwrt_bandix https://github.com/timsaya/openwrt-bandix.git;main"
-    append_feed_if_missing "$FEEDS_PATH" "luci_app_bandix" "src-git luci_app_bandix https://github.com/timsaya/luci-app-bandix.git;main"
     append_feed_if_missing "$FEEDS_PATH" "kenzok" "src-git kenzok https://github.com/kenzok8/openwrt-packages.git;master"
     append_feed_if_missing "$FEEDS_PATH" "small" "src-git small https://github.com/kenzok8/small.git;master"
 
@@ -57,16 +55,6 @@ install_feeds() {
                 # kenzok 源选择性安装需要的包，避免与官方源冲突
                 echo "选择性安装 kenzok 源中的包..."
                 ./scripts/feeds install -p kenzok -f luci-theme-argon luci-app-argon-config
-                ;;
-            openwrt_bandix)
-                # openwrt-bandix 后端
-                echo "安装 openwrt_bandix 源中的包..."
-                ./scripts/feeds install -p openwrt_bandix -f -a
-                ;;
-            luci_app_bandix)
-                # luci-app-bandix 前端
-                echo "安装 luci_app_bandix 源中的包..."
-                ./scripts/feeds install -p luci_app_bandix -f -a
                 ;;
         esac
         ./scripts/feeds install -f -a -p "$feed_name"
