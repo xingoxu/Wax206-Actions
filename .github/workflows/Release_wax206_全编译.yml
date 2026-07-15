@@ -65,8 +65,8 @@ jobs:
       - name: 设置环境变量
         id: set_env
         run: |
-          sudo -E timedatectl set-timezone Asia/Shanghai
-          BUILD_DATE=$(TZ=UTC-8 date +%y.%m.%d_%H.%M.%S)
+          sudo -E timedatectl set-timezone Asia/Tokyo
+          BUILD_DATE=$(TZ=Asia/Tokyo date +%y.%m.%d_%H.%M.%S)
           echo "BUILD_DATE=$BUILD_DATE" >> $GITHUB_ENV
           
           # ← 修复路径：wrt_core/compilecfg/
@@ -203,8 +203,8 @@ jobs:
 
       - name: 设置日期
         run: |
-          sudo -E timedatectl set-timezone Asia/Shanghai
-          echo "BUILD_DATE=$(TZ=UTC-8 date +%y.%m.%d_%H.%M.%S)" >> $GITHUB_ENV
+          sudo -E timedatectl set-timezone Asia/Tokyo
+          echo "BUILD_DATE=$(TZ=Asia/Tokyo date +%y.%m.%d_%H.%M.%S)" >> $GITHUB_ENV
 
       - name: 生成发布说明
         run: |
