@@ -75,6 +75,7 @@ set network.lan6.device='@lan'
 set network.lan6.proto='dhcpv6'
 set network.lan6.reqaddress='try'
 set network.lan6.reqprefix='no'
+set network.lan6.norelease='0'
 
 # DHCP 由上级路由器提供；本机不发放 IPv4/IPv6 地址。
 set dhcp.lan.ignore='1'
