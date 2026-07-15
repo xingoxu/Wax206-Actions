@@ -63,17 +63,33 @@ set network.lan.gateway='192.168.1.1'
 delete network.lan.dns
 add_list network.lan.dns='1.1.1.1'
 add_list network.lan.dns='8.8.8.8'
+delete network.lan.ip6assign
 
 # AP 不保留独立的逻辑 WAN/WAN6 接口。
 delete network.wan
 delete network.wan6
 
-# DHCP 由上级路由器提供，本机不发放 IPv4/IPv6 地址，也不发送 RA。
+# DHCP 由上级路由器提供；本机不发放 IPv4/IPv6 地址。
 set dhcp.lan.ignore='1'
 set dhcp.lan.dhcpv4='disabled'
-set dhcp.lan.dhcpv6='disabled'
-set dhcp.lan.ra='disabled'
+delete dhcp.lan.dhcpv6
 set dhcp.lan.ndp='disabled'
+
+# 通过 RA 发布 IPv6 DNS 和加密 DNS，但不将本 AP 通告为 IPv6 默认网关。
+set dhcp.lan.ra='server'
+set dhcp.lan.ra_default='2'
+set dhcp.lan.ra_lifetime='0'
+delete dhcp.lan.ra_flags
+add_list dhcp.lan.ra_flags='none'
+set dhcp.lan.ra_dns='1'
+delete dhcp.lan.dns
+add_list dhcp.lan.dns='2606:4700:4700::1111'
+add_list dhcp.lan.dns='2001:4860:4860::8888'
+delete dhcp.lan.dnr
+add_list dhcp.lan.dnr='1 one.one.one.one 2606:4700:4700::1111,2606:4700:4700::1001,1.1.1.1,1.0.0.1 alpn=dot port=853'
+add_list dhcp.lan.dnr='1 dns.google 2001:4860:4860::8888,2001:4860:4860::8844,8.8.8.8,8.8.4.4 alpn=dot port=853'
+add_list dhcp.lan.dnr='2 cloudflare-dns.com 2606:4700:4700::1111,2606:4700:4700::1001,1.1.1.1,1.0.0.1 alpn=h2,h3 dohpath=/dns-query{?dns}'
+add_list dhcp.lan.dnr='2 dns.google 2001:4860:4860::8888,2001:4860:4860::8844,8.8.8.8,8.8.4.4 alpn=h2,h3 dohpath=/dns-query{?dns}'
 EOF
 
 # 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
@@ -103,7 +119,8 @@ chmod +x package/base-files/files/etc/uci-defaults/99-ap-mode
 echo "✓ AP 模式：管理 IP 192.168.1.32，网关 192.168.1.1"
 echo "✓ LAN DNS：1.1.1.1、8.8.8.8"
 echo "✓ 物理 WAN 口将并入 br-lan"
-echo "✓ DHCPv4、DHCPv6、IPv6 RA 和 NDP 已关闭"
+echo "✓ DHCPv4、DHCPv6 和 NDP 已关闭"
+echo "✓ IPv6 RA 已启用：SLAAC、DNS 和 DoT/DoH DNR 已预置"
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
 
@@ -203,7 +220,7 @@ if [ -f "$MAC80211_UC" ]; then
     sed -i "/set \${s}.country=/a set \${s}.txpower='28'" "$MAC80211_UC"
     
     echo "✓ WiFi 默认启用"
-    echo "✓ SSID 改为 Wax206"  
+    echo "✓ SSID 改为 Wax206"
     echo "✓ 国家代码 JP，功率 28"
 else
     echo "警告: 未找到 $MAC80211_UC"
