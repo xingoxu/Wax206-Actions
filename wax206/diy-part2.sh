@@ -69,10 +69,17 @@ delete network.lan.ip6assign
 delete network.wan
 delete network.wan6
 
+# 通过 LAN 网桥获取 IPv6 地址，不请求 IPv6 前缀。
+set network.lan6='interface'
+set network.lan6.device='@lan'
+set network.lan6.proto='dhcpv6'
+set network.lan6.reqaddress='try'
+set network.lan6.reqprefix='no'
+
 # DHCP 由上级路由器提供；本机不发放 IPv4/IPv6 地址。
 set dhcp.lan.ignore='1'
 set dhcp.lan.dhcpv4='disabled'
-delete dhcp.lan.dhcpv6
+set dhcp.lan.dhcpv6='disabled'
 set dhcp.lan.ndp='disabled'
 
 # 通过 RA 发布 IPv6 DNS 和加密 DNS，但不将本 AP 通告为 IPv6 默认网关。
@@ -117,7 +124,32 @@ set system.wifi5_blue.dev='wl1-ap0'
 add_list system.wifi5_blue.mode='link'
 add_list system.wifi5_blue.mode='tx'
 add_list system.wifi5_blue.mode='rx'
+
+# uHTTPd 仅监听 IPv4 HTTP/HTTPS。
+delete uhttpd.main.listen_http
+add_list uhttpd.main.listen_http='0.0.0.0:80'
+delete uhttpd.main.listen_https
+add_list uhttpd.main.listen_https='0.0.0.0:443'
 EOF
+
+# 查找名称为 lan 的防火墙 zone，避免使用会变化的 cfgXXXXXX 匿名节名。
+LAN_FIREWALL_ZONE="$({
+    uci -q show firewall | sed -n "s/^\(firewall\.[^=]*\)=zone$/\1/p" | while read -r section; do
+        if [ "$(uci -q get "${section}.name")" = 'lan' ]; then
+            echo "$section"
+            break
+        fi
+    done
+} 2>/dev/null)"
+
+if [ -n "$LAN_FIREWALL_ZONE" ]; then
+    uci -q del_list "${LAN_FIREWALL_ZONE}.network=lan"
+    uci -q del_list "${LAN_FIREWALL_ZONE}.network=lan6"
+    uci -q add_list "${LAN_FIREWALL_ZONE}.network=lan"
+    uci -q add_list "${LAN_FIREWALL_ZONE}.network=lan6"
+else
+    logger -t 99-ap-mode "未找到 lan 防火墙 zone，无法加入 lan6 接口"
+fi
 
 # 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
 BR_LAN_DEVICE="$({
@@ -140,6 +172,8 @@ uci commit network
 uci commit dhcp
 uci commit system
 uci commit luci
+uci commit firewall
+uci commit uhttpd
 
 exit 0
 APMODE
@@ -152,6 +186,8 @@ echo "✓ DHCPv4、DHCPv6 和 NDP 已关闭"
 echo "✓ IPv6 RA 已启用：SLAAC、DNS 和 DoT/DoH DNR 已预置"
 echo "✓ 时区：Asia/Tokyo，24 小时制，LuCI 简体中文"
 echo "✓ 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯已配置"
+echo "✓ LAN6 DHCPv6 客户端和 lan 防火墙 zone 已配置"
+echo "✓ uHTTPd 仅监听 IPv4：0.0.0.0:80 和 0.0.0.0:443"
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
 
