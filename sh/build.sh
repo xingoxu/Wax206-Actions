@@ -193,8 +193,13 @@ FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
 
-# 复制固件和 manifest 文件
-find "$TARGET_DIR" -type f \( -name "*.bin"  -o -name "*.itb" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+# 复制固件和 manifest 文件。factory.img 可用于 NMRP 恢复或网件原厂 Web 升级。
+find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.img" -o -name "*.itb" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+
+# 缺少新增的 factory 固件时只提示，不中断后续发布。
+if ! find "$FIRMWARE_DIR" -maxdepth 1 -type f -name "*netgear_wax206*factory.img" -print -quit | grep -q .; then
+    echo "::warning::未找到 WAX206 factory.img（NMRP/网件原厂升级固件），继续执行后续步骤"
+fi
 
 # 删除这行或注释掉
 # \rm -f "$BASE_PATH/../firmware/Packages.manifest" 2>/dev/null
