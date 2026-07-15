@@ -90,6 +90,13 @@ add_list dhcp.lan.dnr='1 one.one.one.one 2606:4700:4700::1111,2606:4700:4700::10
 add_list dhcp.lan.dnr='1 dns.google 2001:4860:4860::8888,2001:4860:4860::8844,8.8.8.8,8.8.4.4 alpn=dot port=853'
 add_list dhcp.lan.dnr='2 cloudflare-dns.com 2606:4700:4700::1111,2606:4700:4700::1001,1.1.1.1,1.0.0.1 alpn=h2,h3 dohpath=/dns-query{?dns}'
 add_list dhcp.lan.dnr='2 dns.google 2001:4860:4860::8888,2001:4860:4860::8844,8.8.8.8,8.8.4.4 alpn=h2,h3 dohpath=/dns-query{?dns}'
+
+# 时区、时制和 LuCI 语言。
+set system.@system[0].zonename='Asia/Tokyo'
+set system.@system[0].timezone='JST-9'
+set system.@system[0].clock_hourcycle='h23'
+set luci.main.lang='zh_cn'
+
 EOF
 
 # 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
