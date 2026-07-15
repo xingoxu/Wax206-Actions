@@ -48,8 +48,8 @@ fi
 # 配置主机名
 # ==========================================
 if [ -f "package/base-files/files/bin/config_generate" ]; then
-    sed -i 's/OpenWrt/Wax206/g' package/base-files/files/bin/config_generate
-    echo "✓ 主机名改为Wax206"
+    sed -i 's/OpenWrt/Netgear-WAX206/g' package/base-files/files/bin/config_generate
+    echo "✓ 主机名改为Netgear-WAX206"
 fi
 
 # ==========================================
