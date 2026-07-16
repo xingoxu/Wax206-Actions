@@ -353,6 +353,19 @@ else
     find . -name "mac80211.uc" -type f 2>/dev/null
 fi
 
+# ==========================================
+# 启用 mt7915e WED (Wireless Ethernet Dispatch)
+# ==========================================
+MT7915E_MODULES="package/base-files/files/etc/modules.d/mt7915e"
+
+if [ -f "$MT7915E_MODULES" ]; then
+    sed -i "s/mt7915e/mt7915e wed_enable=Y/g" "$MT7915E_MODULES"
+    echo "✓ mt7915e 已启用 WED"
+else
+    echo "警告: 未找到 $MT7915E_MODULES"
+    find . -path "*etc/modules.d/mt7915e" -type f 2>/dev/null
+fi
+
 echo "=========================================="
 echo "DIY 配置完成！"
 echo "=========================================="
