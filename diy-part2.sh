@@ -131,7 +131,41 @@ delete uhttpd.main.listen_http
 add_list uhttpd.main.listen_http='0.0.0.0:80'
 delete uhttpd.main.listen_https
 add_list uhttpd.main.listen_https='0.0.0.0:443'
+set uhttpd.main.redirect_https='1'
 EOF
+
+# 按频段设置无线设备，不依赖 radio0/radio1 的排列顺序。
+WIRELESS_DEVICES="$({
+    uci -q show wireless | sed -n "s/^\(wireless\.[^=]*\)=wifi-device$/\1/p"
+} 2>/dev/null)"
+
+for device in $WIRELESS_DEVICES; do
+    band="$(uci -q get "${device}.band")"
+    hwmode="$(uci -q get "${device}.hwmode")"
+
+    case "${band}:${hwmode}" in
+        2g:*|*:11g)
+            uci -q set "${device}.channel=auto"
+            ;;
+        5g:*|*:11a)
+            uci -q set "${device}.channel=44"
+            uci -q set "${device}.htmode=HE160"
+            ;;
+    esac
+done
+
+# 为两个频段的 AP 无线接口启用 802.11k/802.11v 和 Proxy ARP。
+WIRELESS_INTERFACES="$({
+    uci -q show wireless | sed -n "s/^\(wireless\.[^=]*\)=wifi-iface$/\1/p"
+} 2>/dev/null)"
+
+for interface in $WIRELESS_INTERFACES; do
+    if [ "$(uci -q get "${interface}.mode")" = 'ap' ]; then
+        uci -q set "${interface}.ieee80211k=1"
+        uci -q set "${interface}.bss_transition=1"
+        uci -q set "${interface}.proxy_arp=1"
+    fi
+done
 
 # 查找名称为 lan 的防火墙 zone，避免使用会变化的 cfgXXXXXX 匿名节名。
 LAN_FIREWALL_ZONE="$({
@@ -175,6 +209,7 @@ uci commit system
 uci commit luci
 uci commit firewall
 uci commit uhttpd
+uci commit wireless
 
 exit 0
 APMODE
@@ -189,6 +224,9 @@ echo "✓ 时区：Asia/Tokyo，24 小时制，LuCI 简体中文"
 echo "✓ 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯已配置"
 echo "✓ LAN6 DHCPv6 客户端和 lan 防火墙 zone 已配置"
 echo "✓ uHTTPd 仅监听 IPv4：0.0.0.0:80 和 0.0.0.0:443"
+echo "✓ HTTP 自动重定向 HTTPS"
+echo "✓ Wi-Fi：2.4 GHz 自动信道；5 GHz AX、信道 44、160 MHz"
+echo "✓ 2.4 GHz 和 5 GHz AP 已启用 802.11k、BSS Transition 和 Proxy ARP"
 
 # ========== 最后：强制覆盖 distfeeds.list ==========
 
