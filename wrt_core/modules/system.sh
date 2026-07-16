@@ -160,9 +160,6 @@ fix_mkpkg_format_invalid() {
         if [ -f "$custom_feed_worktree_dir/luci-lib-taskd/Makefile" ]; then
             sed -i 's/>=1\.0\.3-1/>=1\.0\.3-r1/g' "$custom_feed_worktree_dir/luci-lib-taskd/Makefile"
         fi
-        if [ -f "$custom_feed_worktree_dir/luci-app-openclash/Makefile" ]; then
-            sed -i 's/PKG_RELEASE:=beta/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-openclash/Makefile"
-        fi
         if [ -f "$custom_feed_worktree_dir/luci-app-quickstart/Makefile" ]; then
             sed -i 's/PKG_VERSION:=0\.8\.16-1/PKG_VERSION:=0\.8\.16/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"
             sed -i 's/PKG_RELEASE:=$/PKG_RELEASE:=1/g' "$custom_feed_worktree_dir/luci-app-quickstart/Makefile"

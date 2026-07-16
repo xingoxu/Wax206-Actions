@@ -239,11 +239,6 @@ update_feeds() {
         echo "src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall;main" >>"$FEEDS_PATH"
     fi
 
-    if ! grep -q "openclash" "$FEEDS_PATH"; then
-        [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-        echo "src-git openclash https://github.com/vernesong/OpenClash.git;master" >>"$FEEDS_PATH"
-    fi
-
     if ! grep -q "openwrt_bandix" "$BUILD_DIR/$FEEDS_CONF"; then
         [ -z "$(tail -c 1 "$BUILD_DIR/$FEEDS_CONF")" ] || echo "" >>"$BUILD_DIR/$FEEDS_CONF"
         echo 'src-git openwrt_bandix https://github.com/timsaya/openwrt-bandix.git;main' >>"$BUILD_DIR/$FEEDS_CONF"
@@ -265,8 +260,8 @@ update_feeds() {
     # 更新官方 feeds（这些源的 Makefile 格式正常）
     ./scripts/feeds update base packages luci routing telephony
     
-    # 更新 OpenClash 和 Passwall（这些源格式正常）
-    for feed in openclash passwall; do
+    # 更新 Passwall（这些源格式正常）
+    for feed in passwall; do
         ./scripts/feeds update "$feed" 2>/dev/null || echo "Warning: $feed update failed"
     done
     
@@ -301,11 +296,6 @@ install_feeds() {
             ./scripts/feeds install -f -ap "$feed" || echo "Warning: $feed install failed"
         fi
     done
-    
-    # 安装 OpenClash
-    if [ -d "$BUILD_DIR/feeds/openclash" ]; then
-        install_openclash || echo "Warning: OpenClash install failed"
-    fi
     
     # 安装 Passwall
     if [ -d "$BUILD_DIR/feeds/passwall" ]; then
@@ -372,15 +362,9 @@ install_fichenx() {
         v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
         luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
         luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
-        lucky luci-app-lucky luci-app-openclash luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+        lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
         tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
         msd_lite luci-app-msd_lite cups luci-app-cupsd
-    cd - > /dev/null
-}
-
-install_openclash() {
-    cd "$BUILD_DIR"
-    ./scripts/feeds install -p openclash -f luci-app-openclash
     cd - > /dev/null
 }
 
