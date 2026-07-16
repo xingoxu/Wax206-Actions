@@ -1,5 +1,6 @@
 #!/bin/bash
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 Dev=$1
 BUILD_DIR=${2:-$1}
 
@@ -18,6 +19,21 @@ fi
 
 cd "$BUILD_DIR" || exit 1
 echo "进入目录: $(pwd)"
+
+# ==========================================
+# 更新日本 5 GHz 监管功率限制
+# ==========================================
+REGDB_PATCH="$SCRIPT_DIR/patches/001-wireless-regdb-jp-28dbm.patch"
+REGDB_PATCH_DIR="package/firmware/wireless-regdb/patches"
+
+if [ ! -f "$REGDB_PATCH" ]; then
+    echo "错误: 找不到 wireless-regdb 补丁: $REGDB_PATCH"
+    exit 1
+fi
+
+mkdir -p "$REGDB_PATCH_DIR"
+cp -f "$REGDB_PATCH" "$REGDB_PATCH_DIR/001-wireless-regdb-jp-28dbm.patch"
+echo "✓ 已安装日本 5 GHz 28 dBm wireless-regdb 补丁"
 
 # ==========================================
 # 配置 AP 管理 IP
@@ -132,6 +148,9 @@ add_list uhttpd.main.listen_http='0.0.0.0:80'
 delete uhttpd.main.listen_https
 add_list uhttpd.main.listen_https='0.0.0.0:443'
 set uhttpd.main.redirect_https='1'
+
+# Dropbear SSH 仅绑定到 LAN 接口。
+set dropbear.main.Interface='lan'
 EOF
 
 # 按频段设置无线设备，不依赖 radio0/radio1 的排列顺序。
@@ -210,6 +229,7 @@ uci commit luci
 uci commit firewall
 uci commit uhttpd
 uci commit wireless
+uci commit dropbear
 
 exit 0
 APMODE
