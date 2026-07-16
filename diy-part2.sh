@@ -231,6 +231,9 @@ uci commit uhttpd
 uci commit wireless
 uci commit dropbear
 
+# 启用 mt7915e WED (Wireless Ethernet Dispatch)
+[ -f /etc/modules.d/mt7915e ] && sed -i -e "s/mt7915e/mt7915e wed_enable=Y/g" /etc/modules.d/mt7915e
+
 exit 0
 APMODE
 
