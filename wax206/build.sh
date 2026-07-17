@@ -199,9 +199,9 @@ reset_feeds_conf() {
         git remote set-url origin "$REPO_URL" 2>/dev/null || git remote add origin "$REPO_URL"
     fi
     # 浅克隆(--depth 1)不会创建远程分支引用(如 origin/main)
-    # 先 fetch 建立 origin/$REPO_BRANCH 引用，再 reset
+    # 先 fetch，再用 FETCH_HEAD reset（同时兼容分支名和 tag，如 v25.12.3）
     git fetch origin "$REPO_BRANCH" --depth 1
-    git reset --hard "origin/$REPO_BRANCH"
+    git reset --hard FETCH_HEAD
     # 使用 -e 排除缓存目录，避免删除 staging_dir 和 .ccache
     git clean -f -d -e staging_dir -e .ccache -e tmp
     if [[ "$COMMIT_HASH" != "none" ]]; then
