@@ -297,14 +297,26 @@ echo "✓ 2.4 GHz 和 5 GHz AP 已启用 802.11k、BSS Transition 和 Proxy ARP"
 # ==========================================
 # Passwall2 APK 在线软件源（不参与固件编译）
 # ==========================================
-mkdir -p package/base-files/files/etc/apk/repositories.d
 mkdir -p package/base-files/files/etc/apk/keys
+mkdir -p package/base-files/files/etc/uci-defaults
 
-cat > package/base-files/files/etc/apk/repositories.d/customfeeds.list << 'EOF'
-https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall_packages/packages.adb
-https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall_luci/packages.adb
-https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall2/packages.adb
+cat > package/base-files/files/etc/uci-defaults/90-passwall2-customfeeds << 'PASSWALL_FEEDS'
+#!/bin/sh
+
+. /etc/openwrt_release
+release="${DISTRIB_RELEASE%.*}"
+arch="$DISTRIB_ARCH"
+
+mkdir -p /etc/apk/repositories.d
+cat >> /etc/apk/repositories.d/customfeeds.list <<EOF
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-${release}/${arch}/passwall_packages/packages.adb
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-${release}/${arch}/passwall_luci/packages.adb
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-${release}/${arch}/passwall2/packages.adb
 EOF
+
+exit 0
+PASSWALL_FEEDS
+chmod +x package/base-files/files/etc/uci-defaults/90-passwall2-customfeeds
 
 PASSWALL_APK_KEY_URL="https://sourceforge.net/projects/openwrt-passwall-build/files/apk.pub"
 PASSWALL_APK_KEY_PATH="package/base-files/files/etc/apk/keys/passwall.pub"
@@ -321,7 +333,7 @@ if ! grep -q '^-----BEGIN PUBLIC KEY-----$' "$PASSWALL_APK_KEY_PATH"; then
     exit 1
 fi
 
-echo "✓ 已预置 Passwall2 APK 在线软件源及签名公钥"
+echo "✓ 已预置 Passwall2 APK 软件源初始化脚本及签名公钥"
 
 # ==========================================
 # Conntrack 优化配置
