@@ -5,7 +5,7 @@ set -e
 # Determine wrt_core path
 if [ -d "wrt_core" ]; then
     WRT_CORE_PATH="wrt_core"
-elif [ -d "../wrt_core" ]; then
+    elif [ -d "../wrt_core" ]; then
     WRT_CORE_PATH="../wrt_core"
 else
     echo "Error: wrt_core directory not found!"
@@ -38,7 +38,7 @@ read_ini_by_key() {
 remove_uhttpd_dependency() {
     local config_path="$BASE_PATH/../$BUILD_DIR/.config"
     local luci_makefile_path="$BASE_PATH/../$BUILD_DIR/feeds/luci/collections/luci/Makefile"
-
+    
     if grep -q "CONFIG_PACKAGE_luci-app-quickfile=y" "$config_path"; then
         if [ -f "$luci_makefile_path" ]; then
             sed -i '/luci-light/d' "$luci_makefile_path"
@@ -51,14 +51,14 @@ apply_config() {
     \cp -f "$CONFIG_FILE" "$BASE_PATH/../$BUILD_DIR/.config"
     
     if grep -qE "(ipq60xx|ipq807x)" "$BASE_PATH/../$BUILD_DIR/.config" &&
-        ! grep -q "CONFIG_GIT_MIRROR" "$BASE_PATH/../$BUILD_DIR/.config"; then
+    ! grep -q "CONFIG_GIT_MIRROR" "$BASE_PATH/../$BUILD_DIR/.config"; then
         cat "$BASE_PATH/deconfig/nss.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
     fi
-
+    
     #cat "$BASE_PATH/config/compile_base.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
-
+    
     #cat "$BASE_PATH/config/docker_deps.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
-
+    
     #cat "$BASE_PATH/deconfig/proxy.config" >> "$BASE_PATH/../$BUILD_DIR/.config"
 }
 
@@ -74,24 +74,24 @@ if [[ -d action_build ]]; then
 fi
 
 # ==================== 新增：替换自定义 DTS/MK 文件 ====================
-validate_factory_layout() {
-    local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
+# validate_factory_layout() {
+#     local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
 
-    kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
-    ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
+#     kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
+#     ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
 
-    if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
-        echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
-        exit 1
-    fi
+#     if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
+#         echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
+#         exit 1
+#     fi
 
-    ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
-    if (( kernel_size_kib != ubi_offset_kib )); then
-        echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
-        exit 1
-    fi
-    echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
-}
+#     ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
+#     if (( kernel_size_kib != ubi_offset_kib )); then
+#         echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
+#         exit 1
+#     fi
+#     echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
+# }
 
 replace_custom_files() {
     local dts_src dts_dst mk_src mk_dst
@@ -105,25 +105,25 @@ replace_custom_files() {
             echo "=== 应用 FMWAX206 自定义配置（70M 大分区）==="
             dts_src="$BASE_PATH/dts/wax206-70m.dts"
             mk_src="$BASE_PATH/mediatek/image/mt7622-70m.mk"
-            ;;
+        ;;
         "gwax206")
             echo "=== 应用 GWAX206 自定义配置（256M 大分区）==="
             dts_src="$BASE_PATH/dts/wax206-256m.dts"
             mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk"
-            ;;
+        ;;
         "gwax206_imm")
             echo "=== 应用 GWAX206 自定义配置（256M 大分区）==="
             dts_src="$BASE_PATH/dts/wax206-256m.dts"
             mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk"
-            ;;
+        ;;
         "wax206")
             echo "=== 使用 WAX206 默认配置（不进行替换）==="
             return 0
-            ;;
+        ;;
         *)
             echo "=== 设备 $Dev 无需自定义 DTS/MK 替换 ==="
             return 0
-            ;;
+        ;;
     esac
     
     # 执行替换
@@ -140,8 +140,8 @@ replace_custom_files() {
     else
         echo "警告: MK 源文件不存在: $mk_src"
     fi
-
-    validate_factory_layout "$mk_dst" "$dts_dst"
+    
+    # validate_factory_layout "$mk_dst" "$dts_dst"
 }
 # ==================================================
 

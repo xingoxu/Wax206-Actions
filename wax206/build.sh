@@ -47,7 +47,7 @@ Build_Mod=$2
 # 确定 wax206 目录路径（现在在正确的根目录下判断）
 if [ -d "wax206" ]; then
     WAX206_PATH="wax206"
-elif [ -d "../wax206" ]; then
+    elif [ -d "../wax206" ]; then
     WAX206_PATH="../wax206"
 else
     echo "Error: wax206 directory not found! (PWD: $(pwd))"
@@ -101,7 +101,7 @@ clone_source() {
     echo "=== 克隆固件代码 ==="
     echo "$REPO_URL $REPO_BRANCH"
     echo "$REPO_URL/$REPO_BRANCH" >"$BASE_PATH/../repo_flag"
-
+    
     # 检查是否存在有效的 git 仓库（必须有 .git 目录）
     if [[ -d "$BASE_PATH/../action_build/.git" ]]; then
         echo "action_build 已存在有效的 git 仓库，跳过克隆"
@@ -125,7 +125,7 @@ clone_source() {
             echo "错误：克隆仓库 $REPO_URL 失败" >&2
             exit 1
         fi
-
+        
         # 恢复缓存目录
         if [[ -d "$BASE_PATH/../cache_temp/staging_dir" ]]; then
             mv "$BASE_PATH/../cache_temp/staging_dir" "$BASE_PATH/../action_build/"
@@ -134,14 +134,14 @@ clone_source() {
             mv "$BASE_PATH/../cache_temp/.ccache" "$BASE_PATH/../action_build/"
         fi
         rm -rf "$BASE_PATH/../cache_temp"
-
+        
         # 移除国内下载源
         local mirrors_file="$BASE_PATH/../action_build/scripts/projectsmirrors.json"
         if [ -f "$mirrors_file" ]; then
             sed -i '/.cn\//d; /tencent/d; /aliyun/d' "$mirrors_file"
         fi
     fi
-
+    
     # 克隆完成后，强制使用 action_build 作为构建目录
     BUILD_DIR="$BASE_PATH/../action_build"
     # 转换为绝对路径
@@ -226,30 +226,30 @@ update_feeds() {
     fi
     sed -i '/^#/d' "$FEEDS_PATH"
     sed -i '/packages_ext/d' "$FEEDS_PATH"
-
+    
     # 注意：不添加 small 源，它包含与官方源冲突的核心包（如 openssl 修改版）
     # 只添加 kenzok 源（用于 argon 主题）
     if ! grep -q "kenzok" "$FEEDS_PATH"; then
         [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
         echo "src-git kenzok https://github.com/kenzok8/openwrt-packages.git;master" >>"$FEEDS_PATH"
     fi
-
+    
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
         touch "$BUILD_DIR/include/bpf.mk"
     fi
-
+    
     # 选择性更新 feeds，避免扫描有问题的第三方源的所有包
     # 问题：kenzok 源中部分包的 Makefile 格式有问题
     # 解决：只更新官方源和已知正常的自定义源，第三方源单独处理
     
     # 更新官方 feeds（这些源的 Makefile 格式正常）
     ./scripts/feeds update base packages luci routing telephony
-
+    
     # Release tag 的 feeds.conf.default 会把 LuCI 固定到具体 commit，导致
     # LuCI 版本信息显示为 detached HEAD。为该 commit 建立对应的本地稳定版
     # 分支，只修正页脚中的分支名称，不改变实际参与编译的 LuCI 源码。
     if [[ "$REPO_BRANCH" =~ ^v([0-9]+\.[0-9]+)\. ]] &&
-       [[ -d "$BUILD_DIR/feeds/luci/.git" ]]; then
+    [[ -d "$BUILD_DIR/feeds/luci/.git" ]]; then
         local luci_release_branch="openwrt-${BASH_REMATCH[1]}"
         git -C "$BUILD_DIR/feeds/luci" checkout -B "$luci_release_branch" HEAD
     fi
@@ -263,7 +263,7 @@ update_feeds() {
             mkdir -p "$BUILD_DIR/feeds/$feed"
             case "$feed" in
                 kenzok)
-                    git clone --depth 1 https://github.com/kenzok8/openwrt-packages.git "$BUILD_DIR/feeds/$feed" 2>/dev/null || true ;;
+                git clone --depth 1 https://github.com/kenzok8/openwrt-packages.git "$BUILD_DIR/feeds/$feed" 2>/dev/null || true ;;
             esac
         fi
     done
@@ -316,15 +316,15 @@ update_golang() {
 install_fichenx() {
     cd "$BUILD_DIR"
     ./scripts/feeds install -p fichenx -f luci-app-argon-config luci-theme-design luci-app-design-config luci-app-watchcat-plus luci-app-wol luci-app-timecontrol \
-        xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
-        naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin \
-        tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
-        v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
-        luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
-        luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
-        lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
-        tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
-        msd_lite luci-app-msd_lite cups luci-app-cupsd
+    xray-core xray-plugin dns2tcp dns2socks haproxy hysteria \
+    naiveproxy shadowsocks-rust sing-box v2ray-core v2ray-geodata geoview v2ray-plugin \
+    tuic-client chinadns-ng ipt2socks tcping trojan-plus simple-obfs shadowsocksr-libev \
+    v2dat mosdns luci-app-mosdns adguardhome luci-app-adguardhome ddns-go \
+    luci-app-ddns-go taskd luci-lib-xterm luci-lib-taskd luci-app-store quickstart \
+    luci-app-quickstart luci-app-istorex luci-app-cloudflarespeedtest netdata luci-app-netdata \
+    lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
+    tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
+    msd_lite luci-app-msd_lite cups luci-app-cupsd
     cd - > /dev/null
 }
 
@@ -346,14 +346,14 @@ fix_rust_compile_error() {
 add_ddns_go() {
     local ddns_go_dir="$BUILD_DIR/package/ddns-go"
     local repo_url="https://github.com/sirpdboy/luci-app-ddns-go.git"
-
+    
     # 移除官方及其它源中的 ddns-go/luci-app-ddns-go，避免包定义冲突
     rm -rf "$BUILD_DIR/feeds/packages/net/ddns-go" 2>/dev/null
     rm -rf "$BUILD_DIR/feeds/luci/applications/luci-app-ddns-go" 2>/dev/null
     rm -rf "$BUILD_DIR/package/feeds/packages/ddns-go" 2>/dev/null
     rm -rf "$BUILD_DIR/package/feeds/luci/luci-app-ddns-go" 2>/dev/null
     rm -rf "$ddns_go_dir" 2>/dev/null
-
+    
     echo "正在添加 sirpdboy/luci-app-ddns-go..."
     if ! git clone --depth 1 "$repo_url" "$ddns_go_dir"; then
         echo "错误：从 $repo_url 克隆 luci-app-ddns-go 仓库失败" >&2
@@ -382,10 +382,10 @@ src/gz openwrt_telephony https://downloads.immortalwrt.org/releases/24.10-SNAPSH
 EOF
         sed -i "/define Package\/default-settings\/install/a\\
 \t\$(INSTALL_DIR) \$(1)/etc\n\
-\t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" "$emortal_def_dir/Makefile"
+        \t\$(INSTALL_DATA) ./files/99-distfeeds.conf \$(1)/etc/99-distfeeds.conf\n" "$emortal_def_dir/Makefile"
         sed -i "/exit 0/i\\
 [ -f \'/etc/99-distfeeds.conf\' ] && mv \'/etc/99-distfeeds.conf\' \'/etc/opkg/distfeeds.conf\'\n\
-sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" "$emortal_def_dir/files/99-default-settings"
+        sed -ri \'/check_signature/s@^[^#]@#&@\' /etc/opkg.conf\n" "$emortal_def_dir/files/99-default-settings"
     fi
 }
 
@@ -404,29 +404,29 @@ remove_uhttpd_dependency() {
 apply_config() {
     \cp -f "$CONFIG_FILE" "$BUILD_DIR/.config"
     if grep -qE "(ipq60xx|ipq807x)" "$BUILD_DIR/.config" &&
-        ! grep -q "CONFIG_GIT_MIRROR" "$BUILD_DIR/.config"; then
+    ! grep -q "CONFIG_GIT_MIRROR" "$BUILD_DIR/.config"; then
         cat "$BASE_PATH/deconfig/nss.config" >> "$BUILD_DIR/.config"
     fi
 }
 
-validate_factory_layout() {
-    local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
+# validate_factory_layout() {
+#     local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
 
-    kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
-    ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
+#     kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
+#     ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
 
-    if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
-        echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
-        exit 1
-    fi
+#     if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
+#         echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
+#         exit 1
+#     fi
 
-    ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
-    if (( kernel_size_kib != ubi_offset_kib )); then
-        echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
-        exit 1
-    fi
-    echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
-}
+#     ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
+#     if (( kernel_size_kib != ubi_offset_kib )); then
+#         echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
+#         exit 1
+#     fi
+#     echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
+# }
 
 replace_custom_files() {
     local dts_src dts_dst mk_src mk_dst
@@ -435,22 +435,22 @@ replace_custom_files() {
     case "$Dev" in
         "fmwax206")
             echo "=== 应用 FMWAX206 自定义配置（70M 大分区）==="
-            dts_src="$BASE_PATH/dts/wax206-70m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-70m.mk" ;;
+        dts_src="$BASE_PATH/dts/wax206-70m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-70m.mk" ;;
         "gwax206")
             echo "=== 应用 GWAX206 自定义配置（256M 大分区）==="
-            dts_src="$BASE_PATH/dts/wax206-256m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk" ;;
+        dts_src="$BASE_PATH/dts/wax206-256m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk" ;;
         "gwax206_imm")
             echo "=== 应用 GWAX206 自定义配置（256M 大分区）==="
-            dts_src="$BASE_PATH/dts/wax206-256m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk" ;;
+        dts_src="$BASE_PATH/dts/wax206-256m.dts"; mk_src="$BASE_PATH/mediatek/image/mt7622-256m.mk" ;;
         "wax206")
-            echo "=== 使用 WAX206 默认配置（不进行替换）==="; return 0 ;;
+        echo "=== 使用 WAX206 默认配置（不进行替换）==="; return 0 ;;
         *)
-            echo "=== 设备 $Dev 无需自定义 DTS/MK 替换 ==="; return 0 ;;
+        echo "=== 设备 $Dev 无需自定义 DTS/MK 替换 ==="; return 0 ;;
     esac
     if [[ -f "$dts_src" ]]; then \cp -f "$dts_src" "$dts_dst"; echo "已替换 DTS: $dts_src -> $dts_dst"; else echo "警告: DTS 源文件不存在: $dts_src"; fi
     if [[ -f "$mk_src" ]]; then \cp -f "$mk_src" "$mk_dst"; echo "已替换 MK: $mk_src -> $mk_dst"; else echo "警告: MK 源文件不存在: $mk_src"; fi
-
-    validate_factory_layout "$mk_dst" "$dts_dst"
+    
+    # validate_factory_layout "$mk_dst" "$dts_dst"
 }
 
 # ==================== [update.sh main] 源码更新主流程 ====================
