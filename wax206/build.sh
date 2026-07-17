@@ -249,6 +249,15 @@ update_feeds() {
     
     # 更新官方 feeds（这些源的 Makefile 格式正常）
     ./scripts/feeds update base packages luci routing telephony
+
+    # Release tag 的 feeds.conf.default 会把 LuCI 固定到具体 commit，导致
+    # LuCI 版本信息显示为 detached HEAD。为该 commit 建立对应的本地稳定版
+    # 分支，只修正页脚中的分支名称，不改变实际参与编译的 LuCI 源码。
+    if [[ "$REPO_BRANCH" =~ ^v([0-9]+\.[0-9]+)\. ]] &&
+       [[ -d "$BUILD_DIR/feeds/luci/.git" ]]; then
+        local luci_release_branch="openwrt-${BASH_REMATCH[1]}"
+        git -C "$BUILD_DIR/feeds/luci" checkout -B "$luci_release_branch" HEAD
+    fi
     
     # 更新 Passwall（这些源格式正常）
     for feed in passwall; do
@@ -421,6 +430,25 @@ apply_config() {
     fi
 }
 
+validate_factory_layout() {
+    local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
+
+    kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
+    ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
+
+    if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
+        echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
+        exit 1
+    fi
+
+    ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
+    if (( kernel_size_kib != ubi_offset_kib )); then
+        echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
+        exit 1
+    fi
+    echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
+}
+
 replace_custom_files() {
     local dts_src dts_dst mk_src mk_dst
     dts_dst="$BUILD_DIR/target/linux/mediatek/dts/mt7622-netgear-wax206.dts"
@@ -442,6 +470,8 @@ replace_custom_files() {
     esac
     if [[ -f "$dts_src" ]]; then \cp -f "$dts_src" "$dts_dst"; echo "已替换 DTS: $dts_src -> $dts_dst"; else echo "警告: DTS 源文件不存在: $dts_src"; fi
     if [[ -f "$mk_src" ]]; then \cp -f "$mk_src" "$mk_dst"; echo "已替换 MK: $mk_src -> $mk_dst"; else echo "警告: MK 源文件不存在: $mk_src"; fi
+
+    validate_factory_layout "$mk_dst" "$dts_dst"
 }
 
 # ==================== [update.sh main] 源码更新主流程 ====================
@@ -534,7 +564,7 @@ cd "$BUILD_DIR"
 FIRMWARE_DIR="$BASE_PATH/../firmware"
 \rm -rf "$FIRMWARE_DIR"
 mkdir -p "$FIRMWARE_DIR"
-find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.itb" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.itb" -o -name "*.img" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
 
 # 输出内核版本供workflow使用（容错处理，获取失败不影响编译）
 # 临时关闭严格模式，避免管道失败导致脚本退出

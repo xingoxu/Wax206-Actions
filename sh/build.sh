@@ -74,6 +74,25 @@ if [[ -d action_build ]]; then
 fi
 
 # ==================== 新增：替换自定义 DTS/MK 文件 ====================
+validate_factory_layout() {
+    local mk_file=$1 dts_file=$2 kernel_size_kib ubi_offset_hex ubi_offset_kib
+
+    kernel_size_kib=$(awk '$1 == "KERNEL_SIZE" && $2 == ":=" { sub(/k$/, "", $3); print $3; exit }' "$mk_file")
+    ubi_offset_hex=$(awk '/partition@[0-9a-fA-F]+[[:space:]]*\{/ { p=$0 } /label = "ubi"/ { sub(/^.*partition@/, "", p); sub(/[[:space:]].*$/, "", p); print p; exit }' "$dts_file")
+
+    if [[ -z "$kernel_size_kib" || -z "$ubi_offset_hex" ]]; then
+        echo "错误：无法读取 factory KERNEL_SIZE 或 DTS UBI 起点"
+        exit 1
+    fi
+
+    ubi_offset_kib=$((16#$ubi_offset_hex / 1024))
+    if (( kernel_size_kib != ubi_offset_kib )); then
+        echo "错误：factory padding (${kernel_size_kib} KiB) 与 DTS UBI 起点 (0x${ubi_offset_hex} = ${ubi_offset_kib} KiB) 不一致"
+        exit 1
+    fi
+    echo "factory 布局检查通过：UBI 起点 0x${ubi_offset_hex} (${ubi_offset_kib} KiB)"
+}
+
 replace_custom_files() {
     local dts_src dts_dst mk_src mk_dst
     
@@ -121,6 +140,8 @@ replace_custom_files() {
     else
         echo "警告: MK 源文件不存在: $mk_src"
     fi
+
+    validate_factory_layout "$mk_dst" "$dts_dst"
 }
 # ==================================================
 
@@ -194,7 +215,7 @@ FIRMWARE_DIR="$BASE_PATH/../firmware"
 mkdir -p "$FIRMWARE_DIR"
 
 # 复制固件和 manifest 文件
-find "$TARGET_DIR" -type f \( -name "*.bin"  -o -name "*.itb" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
+find "$TARGET_DIR" -type f \( -name "*.bin" -o -name "*.itb" -o -name "*.img" -o -name "*.manifest" \) -exec cp -f {} "$FIRMWARE_DIR/" \;
 
 # 删除这行或注释掉
 # \rm -f "$BASE_PATH/../firmware/Packages.manifest" 2>/dev/null

@@ -205,6 +205,16 @@ else
     logger -t 99-ap-mode "未找到 lan 防火墙 zone，无法加入 lan6 接口"
 fi
 
+# 启用硬件流量卸载，动态查找 defaults 节以避免依赖会变化的 cfgXXXXXX 匿名节名。
+FIREWALL_DEFAULTS="$(uci -q show firewall | sed -n "s/^\(firewall\.[^=]*\)=defaults$/\1/p" | head -n 1)"
+
+if [ -n "$FIREWALL_DEFAULTS" ]; then
+    uci -q set "${FIREWALL_DEFAULTS}.flow_offloading=1"
+    uci -q set "${FIREWALL_DEFAULTS}.flow_offloading_hw=1"
+else
+    logger -t 99-ap-mode "未找到防火墙 defaults 配置节，无法启用硬件流量卸载"
+fi
+
 # 找到 br-lan 的 device 配置节，将物理 wan 端口加入网桥。
 BR_LAN_DEVICE="$({
     uci -q show network | sed -n "s/^\(network\.[^=]*\)=device$/\1/p" | while read -r section; do
