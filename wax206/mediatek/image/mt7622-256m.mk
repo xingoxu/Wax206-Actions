@@ -64,8 +64,13 @@ define Device/netgear_wax206
   UBINIZE_OPTS := -E 5
   BLOCKSIZE := 128k
   PAGESIZE := 2048
-  KERNEL_SIZE := 14436k
-  IMAGE_SIZE := 262144k
+  # Must match the UBI offset 0xe00000 in wax206-256m.dts exactly.
+  # 0xe00000 / 1024 = 14336 KiB. Using 14436k leaves UBI 100 KiB after
+  # the DT partition boundary, so a factory image boot-loops while a
+  # sysupgrade image (which writes named MTD partitions) still works.
+  KERNEL_SIZE := 14336k
+  # Size of the enlarged "firmware" MTD partition (0xd100000).
+  IMAGE_SIZE := 214016k
   KERNEL := kernel-bin | lzma | fit lzma $$(KDIR)/image-$$(firstword $$(DEVICE_DTS)).dtb | \
 	append-squashfs4-fakeroot
 # recovery can also be used with stock firmware web-ui, hence the padding...

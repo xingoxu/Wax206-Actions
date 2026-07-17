@@ -20,7 +20,15 @@ wrt_core/deconfig 内修改对应config
 
 ---------------------------
 
-windows下采用nmrpflash方式刷机
+Windows 下可采用 nmrpflash 刷写 factory 镜像。
+
+镜像用途：
+
+- `*-squashfs-factory.img`：给 NMRP、原厂 Web UI 或原厂 U-Boot TFTP 使用，可直接落盘启动。
+- `*-squashfs-sysupgrade.bin`：仅用于已经运行 OpenWrt 的设备执行系统升级。
+- `*-initramfs-recovery.itb`：临时在内存中启动，用于救援，不会自动安装到闪存。
+
+`-70m` 和 `-256m` 镜像只能用于已经采用对应扩容方案的机器，不能混刷。
 
 
 nmrpflash命令：
@@ -31,12 +39,11 @@ nmrpflash.exe -L
 
 插电后回车下列命令 
 
-nmrpflash.exe -i 端口名 -f 固件名.itb -a 192.168.1.11 -A 192.168.1.1 
+nmrpflash.exe -i 端口名 -f 固件名-squashfs-factory.img -a 192.168.1.11 -A 192.168.1.1
 
 
-例：nmrpflash.exe -i eth14 -f v1053.img -a 192.168.1.11 -A 192.168.1.1 
+例：nmrpflash.exe -i eth14 -f openwrt-mediatek-mt7622-netgear_wax206-256m-squashfs-factory.img -a 192.168.1.11 -A 192.168.1.1
 
-PS:尽量使用itb、bin两种格式，img格式非官方固件可能会遇到循环重启。
+传输完成后请继续等待设备自行写入并重启，不要立即断电。
 ---------------------------
-
 
