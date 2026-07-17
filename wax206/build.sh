@@ -226,17 +226,12 @@ update_feeds() {
     fi
     sed -i '/^#/d' "$FEEDS_PATH"
     sed -i '/packages_ext/d' "$FEEDS_PATH"
-    
+
     # 注意：不添加 small 源，它包含与官方源冲突的核心包（如 openssl 修改版）
     # 只添加 kenzok 源（用于 argon 主题）
     if ! grep -q "kenzok" "$FEEDS_PATH"; then
         [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
         echo "src-git kenzok https://github.com/kenzok8/openwrt-packages.git;master" >>"$FEEDS_PATH"
-    fi
-
-    if ! grep -q "openwrt-passwall" "$FEEDS_PATH"; then
-        [ -z "$(tail -c 1 "$FEEDS_PATH")" ] || echo "" >>"$FEEDS_PATH"
-        echo "src-git passwall https://github.com/Openwrt-Passwall/openwrt-passwall;main" >>"$FEEDS_PATH"
     fi
 
     if [ ! -f "$BUILD_DIR/include/bpf.mk" ]; then
@@ -258,11 +253,6 @@ update_feeds() {
         local luci_release_branch="openwrt-${BASH_REMATCH[1]}"
         git -C "$BUILD_DIR/feeds/luci" checkout -B "$luci_release_branch" HEAD
     fi
-    
-    # 更新 Passwall（这些源格式正常）
-    for feed in passwall; do
-        ./scripts/feeds update "$feed" 2>/dev/null || echo "Warning: $feed update failed"
-    done
     
     # 对于有问题的第三方源，只克隆但不扫描所有包
     # 后续在 install_feeds 中选择性安装需要的包
@@ -291,11 +281,6 @@ install_feeds() {
             ./scripts/feeds install -f -ap "$feed" || echo "Warning: $feed install failed"
         fi
     done
-    
-    # 安装 Passwall
-    if [ -d "$BUILD_DIR/feeds/passwall" ]; then
-        install_passwall || echo "Warning: Passwall install failed"
-    fi
     
     # 对于有问题的第三方源，手动复制需要的包到 package 目录
     # 这样可以绕过 feeds install 的 Makefile 扫描
@@ -340,12 +325,6 @@ install_fichenx() {
         lucky luci-app-lucky luci-app-homeproxy luci-app-amlogic nikki luci-app-nikki \
         tailscale luci-app-tailscale oaf open-app-filter luci-app-oaf easytier luci-app-easytier \
         msd_lite luci-app-msd_lite cups luci-app-cupsd
-    cd - > /dev/null
-}
-
-install_passwall() {
-    cd "$BUILD_DIR"
-    ./scripts/feeds install -p passwall -f luci-app-passwall
     cd - > /dev/null
 }
 

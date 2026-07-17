@@ -121,7 +121,7 @@ set system.@system[0].timezone='JST-9'
 set system.@system[0].clock_hourcycle='h23'
 set luci.main.lang='zh_cn'
 
-# 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯。
+# 2.4 GHz 和 5 GHz Wi-Fi 指示灯。
 delete system.wifi24_blue
 set system.wifi24_blue='led'
 set system.wifi24_blue.name='2.4Ghz 蓝色'
@@ -141,6 +141,18 @@ set system.wifi5_blue.dev='wl1-ap0'
 add_list system.wifi5_blue.mode='link'
 add_list system.wifi5_blue.mode='tx'
 add_list system.wifi5_blue.mode='rx'
+
+delete system.wifi24_green
+set system.wifi24_green='led'
+set system.wifi24_green.name='2.4Ghz 绿灯'
+set system.wifi24_green.sysfs='wifin:green'
+set system.wifi24_green.trigger='none'
+
+delete system.wifi5_green
+set system.wifi5_green='led'
+set system.wifi5_green.name='5Ghz 绿灯'
+set system.wifi5_green.sysfs='wifia:green'
+set system.wifi5_green.trigger='none'
 
 # uHTTPd 仅监听 IPv4 HTTP/HTTPS。
 delete uhttpd.main.listen_http
@@ -254,33 +266,41 @@ echo "✓ 物理 WAN 口将并入 br-lan"
 echo "✓ DHCPv4、DHCPv6 和 NDP 已关闭"
 echo "✓ IPv6 RA 已启用：SLAAC、DNS 和 DoT/DoH DNR 已预置"
 echo "✓ 时区：Asia/Tokyo，24 小时制，LuCI 简体中文"
-echo "✓ 2.4 GHz 和 5 GHz 蓝色 Wi-Fi 指示灯已配置"
+echo "✓ 2.4 GHz 和 5 GHz 绿色、蓝色 Wi-Fi 指示灯已配置"
 echo "✓ LAN6 DHCPv6 客户端和 lan 防火墙 zone 已配置"
 echo "✓ uHTTPd 仅监听 IPv4：0.0.0.0:80 和 0.0.0.0:443"
 echo "✓ HTTP 自动重定向 HTTPS"
 echo "✓ Wi-Fi：2.4 GHz 自动信道；5 GHz AX、信道 44、160 MHz"
 echo "✓ 2.4 GHz 和 5 GHz AP 已启用 802.11k、BSS Transition 和 Proxy ARP"
 
-# ========== 最后：强制覆盖 distfeeds.list ==========
+# ==========================================
+# Passwall2 APK 在线软件源（不参与固件编译）
+# ==========================================
+mkdir -p package/base-files/files/etc/apk/repositories.d
+mkdir -p package/base-files/files/etc/apk/keys
 
-echo ">>> 强制重置 distfeeds.list 为官方源..."
-
-mkdir -p package/base-files/files/etc/apk/repositories.d/
-
-cat > package/base-files/files/etc/apk/repositories.d/distfeeds.list << 'EOF'
-# This file is auto-generated and build-specific, any changes will be intentionally lost in sysupgrade.
-# Add your custom feeds to /etc/apk/repositories.d/customfeeds.list
-https://downloads.openwrt.org/snapshots/targets/mediatek/mt7622/packages/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/base/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/luci/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/packages/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/routing/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/telephony/packages.adb
-https://downloads.openwrt.org/snapshots/packages/aarch64_cortex-a53/video/packages.adb
+cat > package/base-files/files/etc/apk/repositories.d/customfeeds.list << 'EOF'
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall_packages/packages.adb
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall_luci/packages.adb
+https://sourceforge.net/projects/openwrt-passwall-build/files/releases/packages-25.12/aarch64_cortex-a53/passwall2/packages.adb
 EOF
 
-echo ">>> distfeeds.list 已重置："
-cat package/base-files/files/etc/apk/repositories.d/distfeeds.list
+PASSWALL_APK_KEY_URL="https://sourceforge.net/projects/openwrt-passwall-build/files/apk.pub"
+PASSWALL_APK_KEY_PATH="package/base-files/files/etc/apk/keys/passwall.pub"
+
+echo ">>> 下载 Passwall APK 签名公钥：$PASSWALL_APK_KEY_URL"
+if ! wget --tries=3 --timeout=15 \
+    -O "$PASSWALL_APK_KEY_PATH" "$PASSWALL_APK_KEY_URL"; then
+    echo "错误：Passwall APK 签名公钥下载失败" >&2
+    exit 1
+fi
+
+if ! grep -q '^-----BEGIN PUBLIC KEY-----$' "$PASSWALL_APK_KEY_PATH"; then
+    echo "错误：下载的 Passwall APK 签名公钥格式无效" >&2
+    exit 1
+fi
+
+echo "✓ 已预置 Passwall2 APK 在线软件源及签名公钥"
 
 # ==========================================
 # Conntrack 优化配置

@@ -58,10 +58,8 @@ main() {
     # update_ath11k_fw
     # fix_mkpkg_format_invalid
     change_cpuusage
-    update_tcping
     # add_ax6600_led
     set_custom_task
-    apply_passwall_tweaks
     update_nss_pbuf_performance
     set_build_signature
     update_nss_diag
