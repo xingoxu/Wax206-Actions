@@ -67,6 +67,27 @@ echo ">>> 写入 AP 模式首次启动配置..."
 
 mkdir -p package/base-files/files/etc/uci-defaults
 
+# ==========================================
+# 配置 Argon 亮色模式主色调
+# ==========================================
+cat > package/base-files/files/etc/uci-defaults/98-argon-primary << 'ARGON'
+#!/bin/sh
+
+[ -f /etc/config/argon ] || touch /etc/config/argon
+
+if ! uci -q show argon | grep -q '=global$'; then
+    uci -q add argon global >/dev/null
+fi
+
+# primary 仅控制亮色模式；保留 dark_primary 的主题默认值。
+uci -q set argon.@global[0].primary='#036D52'
+uci -q commit argon
+
+exit 0
+ARGON
+chmod +x package/base-files/files/etc/uci-defaults/98-argon-primary
+echo "✓ Argon 亮色模式主色调改为 #036D52"
+
 cat > package/base-files/files/etc/uci-defaults/99-ap-mode << 'APMODE'
 #!/bin/sh
 
